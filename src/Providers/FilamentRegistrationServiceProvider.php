@@ -1,0 +1,92 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tallcms\FilamentRegistration\Providers;
+
+use Filament\Auth\Http\Responses\Contracts\RegistrationResponse as RegistrationResponseContract;
+use Illuminate\Support\ServiceProvider;
+use Tallcms\FilamentRegistration\Captcha\CaptchaManager;
+use Tallcms\FilamentRegistration\Captcha\Contracts\CaptchaProvider;
+use Tallcms\FilamentRegistration\Http\Responses\RegistrationResponse;
+use Tallcms\FilamentRegistration\Services\SettingsRepository;
+
+class FilamentRegistrationServiceProvider extends ServiceProvider
+{
+    public function register(): void
+    {
+        // Defaults — apps can override via config/filament-registration.php
+        // or env. DB-stored values (managed in Filament admin) merge in
+        // during boot() and take precedence over these.
+        $defaults = [
+            'captcha' => [
+                // null = auto (enable iff site_key and secret_key are both present);
+                // explicit true/false from env wins.
+                'enabled' => env('FILAMENT_REGISTRATION_CAPTCHA_ENABLED'),
+                'provider' => env('FILAMENT_REGISTRATION_CAPTCHA_PROVIDER', 'turnstile'),
+                'site_key' => env('FILAMENT_REGISTRATION_CAPTCHA_SITE_KEY', ''),
+                'secret_key' => env('FILAMENT_REGISTRATION_CAPTCHA_SECRET_KEY', ''),
+                'recaptcha_min_score' => (float) env('FILAMENT_REGISTRATION_CAPTCHA_RECAPTCHA_MIN_SCORE', 0.5),
+            ],
+        ];
+
+        $appConfig = config_path('filament-registration.php');
+
+        if (file_exists($appConfig)) {
+            $this->mergeConfigFrom($appConfig, 'filament-registration');
+        }
+
+        config(['filament-registration' => array_replace_recursive($defaults, config('filament-registration', []))]);
+
+        $this->app->singleton(SettingsRepository::class);
+        $this->app->singleton(CaptchaManager::class);
+
+        // Each call resolves a fresh provider so settings updates take effect
+        // without restarting workers; the manager is cheap.
+        $this->app->bind(CaptchaProvider::class, fn ($app) => $app->make(CaptchaManager::class)->resolve());
+
+        // Default post-registration response. Hosts override by binding the
+        // same Filament contract to a different concrete in their own
+        // service provider (e.g. an onboarding-aware redirect).
+        $this->app->bind(RegistrationResponseContract::class, RegistrationResponse::class);
+    }
+
+    public function boot(): void
+    {
+        $this->loadViewsFrom(__DIR__.'/../../resources/views', 'filament-registration');
+        $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
+
+        $this->mergeDbSettingsIntoConfig();
+    }
+
+    /**
+     * Pull DB-stored settings (managed via Filament admin) into runtime
+     * config so the captcha manager picks them up.
+     */
+    private function mergeDbSettingsIntoConfig(): void
+    {
+        try {
+            $stored = app(SettingsRepository::class)->all();
+        } catch (\Throwable $e) {
+            return;
+        }
+
+        if ($stored === []) {
+            return;
+        }
+
+        $map = [
+            'captcha_enabled' => 'filament-registration.captcha.enabled',
+            'captcha_provider' => 'filament-registration.captcha.provider',
+            'captcha_site_key' => 'filament-registration.captcha.site_key',
+            'captcha_secret_key' => 'filament-registration.captcha.secret_key',
+            'captcha_recaptcha_min_score' => 'filament-registration.captcha.recaptcha_min_score',
+        ];
+
+        foreach ($map as $dbKey => $configKey) {
+            if (array_key_exists($dbKey, $stored)) {
+                config([$configKey => $stored[$dbKey]]);
+            }
+        }
+    }
+}

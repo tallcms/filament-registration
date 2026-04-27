@@ -1,0 +1,20 @@
+{
+    "name": "Filament Registration",
+    "slug": "filament-registration",
+    "vendor": "tallcms",
+    "version": "1.0.0",
+    "description": "Filament-native user registration with pluggable captcha and configurable default-role assignment",
+    "author": "TallCMS",
+    "author_url": "https://tallcms.com",
+    "homepage": "https://github.com/tallcms/filament-registration",
+    "namespace": "Tallcms\\FilamentRegistration",
+    "provider": "Tallcms\\FilamentRegistration\\Providers\\FilamentRegistrationServiceProvider",
+    "filament_plugin": "Tallcms\\FilamentRegistration\\Filament\\FilamentRegistrationPlugin",
+    "tags": ["filament", "registration", "captcha", "auth", "free"],
+    "license_required": false,
+    "license": "MIT",
+    "compatibility": {
+        "php": "^8.2",
+        "filament": "^5.0"
+    }
+}

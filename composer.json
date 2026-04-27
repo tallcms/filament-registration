@@ -1,0 +1,56 @@
+{
+    "name": "tallcms/filament-registration",
+    "description": "Filament-native user registration with pluggable captcha (Cloudflare Turnstile, Google reCAPTCHA v3) and configurable default-role assignment.",
+    "type": "library",
+    "version": "1.0.0",
+    "license": "MIT",
+    "keywords": ["filament", "filament-plugin", "registration", "captcha", "turnstile", "recaptcha", "auth"],
+    "homepage": "https://github.com/tallcms/filament-registration",
+    "support": {
+        "issues": "https://github.com/tallcms/filament-registration/issues",
+        "source": "https://github.com/tallcms/filament-registration"
+    },
+    "authors": [
+        {
+            "name": "TallCMS",
+            "email": "support@tallcms.com",
+            "homepage": "https://tallcms.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "filament/filament": "^5.0",
+        "spatie/laravel-permission": "^6.0",
+        "illuminate/support": "^11.0|^12.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^9.0|^10.0",
+        "phpunit/phpunit": "^11.0",
+        "laravel/pint": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Tallcms\\FilamentRegistration\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tallcms\\FilamentRegistration\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Tallcms\\FilamentRegistration\\Providers\\FilamentRegistrationServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
