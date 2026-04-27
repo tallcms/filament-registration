@@ -46,9 +46,55 @@ Optional: enable Filament's built-in email verification with `->emailVerificatio
 
 ## Configuration
 
-After installation, navigate to **Admin → Settings → Registration** to configure captcha. Secrets are encrypted at rest. Site keys (public) and provider selection are stored alongside.
+There are three places captcha settings can come from. They merge in this order of precedence (highest first):
 
-The captcha provider is detected from the saved settings; you don't need to wire each provider individually.
+1. **Database** (managed via the Admin UI at **Settings → Registration**) — what the plugin shows in the form, with the secret encrypted at rest.
+2. **`config/filament-registration.php`** — optional per-app override file. Publish + edit if you want to commit settings into your repo instead of `.env`.
+3. **Environment variables** — useful for keeping secrets out of code and per-environment overrides (e.g. test keys in staging, real keys in prod).
+
+The captcha provider is detected from whichever layer wins; you don't need to wire each provider individually.
+
+### Environment variables
+
+All optional. The plugin works fully through the Admin UI without any of these set.
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `FILAMENT_REGISTRATION_CAPTCHA_ENABLED` | *unset* (auto) | Force captcha on (`true`) or off (`false`). When unset, captcha auto-enables if both `SITE_KEY` and `SECRET_KEY` are present, and stays off otherwise. |
+| `FILAMENT_REGISTRATION_CAPTCHA_PROVIDER` | `turnstile` | `turnstile` (Cloudflare) or `recaptcha_v3` (Google). |
+| `FILAMENT_REGISTRATION_CAPTCHA_SITE_KEY` | `''` | Public key embedded in the form. Safe to commit to source control if you want. |
+| `FILAMENT_REGISTRATION_CAPTCHA_SECRET_KEY` | `''` | Private key for server-side verification. **Keep out of source control** — env or DB only. |
+| `FILAMENT_REGISTRATION_CAPTCHA_RECAPTCHA_MIN_SCORE` | `0.5` | reCAPTCHA v3 only. Tokens scoring below this threshold are rejected. Range 0.0 (lenient) – 1.0 (strict). |
+
+Example `.env` for production with Cloudflare Turnstile:
+
+```env
+FILAMENT_REGISTRATION_CAPTCHA_ENABLED=true
+FILAMENT_REGISTRATION_CAPTCHA_PROVIDER=turnstile
+FILAMENT_REGISTRATION_CAPTCHA_SITE_KEY=0x4AAAAAAA...
+FILAMENT_REGISTRATION_CAPTCHA_SECRET_KEY=0x4AAAAAAA...
+```
+
+The Admin UI's "Secret key status" indicator reads ✓ Configured when *any* layer (DB, config file, or env) supplies a secret. So if your secret lives in `.env`, you can leave the form's secret field blank — the form treats blank as "keep current".
+
+### Customising via `config/filament-registration.php`
+
+If you'd rather commit settings into source control than the database or env, publish the config file (it doesn't ship one yet — Composer convention is to copy from `vendor/`, but for this plugin you can just create it):
+
+```php
+// config/filament-registration.php
+return [
+    'captcha' => [
+        'enabled' => true,
+        'provider' => 'turnstile',
+        'site_key' => env('FILAMENT_REGISTRATION_CAPTCHA_SITE_KEY'),
+        'secret_key' => env('FILAMENT_REGISTRATION_CAPTCHA_SECRET_KEY'),
+        'recaptcha_min_score' => 0.5,
+    ],
+];
+```
+
+Database values still override this. Useful for setting `recaptcha_min_score` per-environment without an env var, or for explicitly disabling captcha in CI tests.
 
 ### Authorization for the settings page
 
