@@ -54,26 +54,41 @@ The captcha provider is detected from the saved settings; you don't need to wire
 
 By default the page is accessible to any user who can reach the panel (i.e. anyone who passes the panel's auth middleware). The plugin doesn't ship a built-in permission gate because Filament users have very different auth setups (some use Shield, some Bouncer, some plain canAccess(), some panel-level middleware). Pick whichever fits your app:
 
-#### Using [TallCMS](https://tallcms.com)? (zero config)
+#### Using [TallCMS](https://tallcms.com) + Multisite plugin? (zero config)
 
-[TallCMS](https://github.com/tallcms/tallcms) is a Laravel + Filament CMS built on the TALL stack. If you're using it, install the [`tallcms/registration`](https://github.com/tallcms/user-registration-plugin) bridge plugin and you're done — the bridge ships with sensible defaults out of the box:
+If you're running [TallCMS](https://github.com/tallcms/tallcms) with the [Multisite plugin](https://github.com/tallcms/multisite-plugin) (the SaaS-style site-builder mode), install the [`tallcms/registration`](https://github.com/tallcms/user-registration-plugin) bridge plugin and you're done — the bridge gives you the full SaaS signup flow out of the box:
 
-- Shield permission gating on the settings page (auto-creates `View:RegistrationSettings`, granted to `super_admin` by default)
-- Default role `site_owner` with role-aware policy scoping
+- Default role `site_owner` (with TallCMS's role-aware policy scoping so each new user only sees their own sites)
 - Onboarding redirect into the Multisite Template Gallery for new users
-- Default site-plan assignment (Multisite plugin integration)
-- Themed login + register pages that match your active theme
+- Default site-plan assignment so quotas apply from day one
+- Themed login + register pages that match your active TallCMS theme
+- 301 redirect from the legacy `/register` URL to the Filament-native page
 
 ```bash
-# In a TallCMS install
+# In a TallCMS + Multisite install
 composer require tallcms/filament-registration
 php artisan migrate
 # Then upload the tallcms/registration bridge plugin via Admin → Plugins
 ```
 
-No subclassing, no `canAccess()` override — TallCMS does it for you. Read more at [tallcms.com](https://tallcms.com).
+No subclassing, no `canAccess()` override — TallCMS Multisite handles it. Read more at [tallcms.com](https://tallcms.com).
 
-#### Filament Shield users
+#### Using TallCMS without Multisite?
+
+The bridge plugin is mostly Multisite-coupled (its onboarding redirect and site-plan assignment both no-op without the Multisite plugin). For a vanilla TallCMS install, skip the bridge and use this plugin directly:
+
+```php
+$panel
+    ->registration(\Tallcms\FilamentRegistration\Filament\Pages\Register::class)
+    ->plugin(
+        FilamentRegistrationPlugin::make()
+            ->defaultRole('author')   // or whichever role you want
+    );
+```
+
+TallCMS ships Filament Shield, so you can use the [Shield subclass recipe below](#filament-shield-users) to gate the settings page through Shield permissions in one step.
+
+#### Filament Shield users {#filament-shield-users}
 
 Subclass the page and add the trait, then point your panel at the subclass:
 
