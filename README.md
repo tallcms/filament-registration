@@ -86,7 +86,7 @@ $panel
     );
 ```
 
-TallCMS ships Filament Shield, so you can use the [Shield subclass recipe below](#filament-shield-users) to gate the settings page through Shield permissions in one step.
+**On gating the settings page**: TallCMS's panel already requires authenticated admin access (`canAccessPanel()`), so unless you want a *stricter* gate (e.g. "only `super_admin` can edit captcha keys, not `editor` or `author`"), you don't need to add anything else. If you do want that stricter cut, see the [Shield subclass recipe below](#filament-shield-users) — note that Shield can't auto-discover this page (it's a vendor class without `HasPageShield`), so the subclass is the canonical wire-up; no `shield:generate` magic alternative exists.
 
 #### Filament Shield users {#filament-shield-users}
 
