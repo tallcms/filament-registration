@@ -2,7 +2,7 @@
     "name": "Filament Registration",
     "slug": "filament-registration",
     "vendor": "tallcms",
-    "version": "1.0.0",
+    "version": "1.1.1",
     "description": "Filament-native user registration with pluggable captcha and configurable default-role assignment",
     "author": "TallCMS",
     "author_url": "https://tallcms.com",

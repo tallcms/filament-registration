@@ -34,6 +34,15 @@ class CaptchaField extends Field
         $static->provider = $provider;
         $static->dehydrated();
 
+        // Set an accessible label and hide it visually. Without this, Filament
+        // derives the label from the snake-case field name (e.g. the Turnstile
+        // token field "cf-turnstile-response") which humanises to a confusing
+        // "Cf turnstile response" heading above the widget. The widget itself
+        // is self-explanatory, so the label is hidden — but it's still set so
+        // screen readers and validation messages have a sensible identity.
+        $static->label(__('Verification'));
+        $static->hiddenLabel();
+
         return $static;
     }
 

@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-04-27
+
+### Fixed
+
+- **Captcha field no longer shows "Cf turnstile response" / "G recaptcha response" as its label** above the widget. Filament was deriving the label from the underlying token field name; the field now sets an accessible "Verification" label and hides it visually since the captcha widget speaks for itself. Validation messages and screen readers still get a sensible identity.
+
 ## [1.1.0] - 2026-04-27
 
 ### Changed
