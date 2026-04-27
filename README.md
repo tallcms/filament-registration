@@ -50,6 +50,12 @@ After installation, navigate to **Admin → Settings → Registration** to confi
 
 The captcha provider is detected from the saved settings; you don't need to wire each provider individually.
 
+> **Heads up on fresh installs**: the settings page is gated by Filament Shield (uses the `HasPageShield` trait, generating a `View:RegistrationSettings` permission). On a fresh install the permission row doesn't exist yet, so the page is hidden from everyone — including super_admins. Run once after installing:
+> ```bash
+> php artisan shield:generate --page=RegistrationSettings --panel=<your-panel-id>
+> ```
+> This creates the permission and grants it to `super_admin`. Other roles get it via the Shield UI (Admin → Roles → pick role → Custom Permissions tab).
+
 ## Customising the post-register redirect
 
 Bind a custom response in your service provider:
