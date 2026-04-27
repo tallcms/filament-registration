@@ -15,10 +15,11 @@ class FilamentRegistrationServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // Defaults — apps can override via config/filament-registration.php
-        // or env. DB-stored values (managed in Filament admin) merge in
-        // during boot() and take precedence over these.
-        $defaults = [
+        // Two-layer config: env vars provide defaults, the Admin UI (DB)
+        // overlays on top during boot(). The plugin doesn't ship a publishable
+        // config/filament-registration.php — settings live in env or in the
+        // tallcms_registration_settings table.
+        config(['filament-registration' => [
             'captcha' => [
                 // null = auto (enable iff site_key and secret_key are both present);
                 // explicit true/false from env wins.
@@ -28,15 +29,7 @@ class FilamentRegistrationServiceProvider extends ServiceProvider
                 'secret_key' => env('FILAMENT_REGISTRATION_CAPTCHA_SECRET_KEY', ''),
                 'recaptcha_min_score' => (float) env('FILAMENT_REGISTRATION_CAPTCHA_RECAPTCHA_MIN_SCORE', 0.5),
             ],
-        ];
-
-        $appConfig = config_path('filament-registration.php');
-
-        if (file_exists($appConfig)) {
-            $this->mergeConfigFrom($appConfig, 'filament-registration');
-        }
-
-        config(['filament-registration' => array_replace_recursive($defaults, config('filament-registration', []))]);
+        ]]);
 
         $this->app->singleton(SettingsRepository::class);
         $this->app->singleton(CaptchaManager::class);

@@ -46,11 +46,10 @@ Optional: enable Filament's built-in email verification with `->emailVerificatio
 
 ## Configuration
 
-There are three places captcha settings can come from. They merge in this order of precedence (highest first):
+Captcha settings come from two layers, with the higher one winning:
 
 1. **Database** (managed via the Admin UI at **Settings → Registration**) — what the plugin shows in the form, with the secret encrypted at rest.
-2. **`config/filament-registration.php`** — optional per-app override file. Publish + edit if you want to commit settings into your repo instead of `.env`.
-3. **Environment variables** — useful for keeping secrets out of code and per-environment overrides (e.g. test keys in staging, real keys in prod).
+2. **Environment variables** — useful for keeping secrets out of source control and per-environment overrides (e.g. test keys in staging, real keys in prod).
 
 The captcha provider is detected from whichever layer wins; you don't need to wire each provider individually.
 
@@ -75,26 +74,7 @@ FILAMENT_REGISTRATION_CAPTCHA_SITE_KEY=0x4AAAAAAA...
 FILAMENT_REGISTRATION_CAPTCHA_SECRET_KEY=0x4AAAAAAA...
 ```
 
-The Admin UI's "Secret key status" indicator reads ✓ Configured when *any* layer (DB, config file, or env) supplies a secret. So if your secret lives in `.env`, you can leave the form's secret field blank — the form treats blank as "keep current".
-
-### Customising via `config/filament-registration.php`
-
-If you'd rather commit settings into source control than the database or env, publish the config file (it doesn't ship one yet — Composer convention is to copy from `vendor/`, but for this plugin you can just create it):
-
-```php
-// config/filament-registration.php
-return [
-    'captcha' => [
-        'enabled' => true,
-        'provider' => 'turnstile',
-        'site_key' => env('FILAMENT_REGISTRATION_CAPTCHA_SITE_KEY'),
-        'secret_key' => env('FILAMENT_REGISTRATION_CAPTCHA_SECRET_KEY'),
-        'recaptcha_min_score' => 0.5,
-    ],
-];
-```
-
-Database values still override this. Useful for setting `recaptcha_min_score` per-environment without an env var, or for explicitly disabling captcha in CI tests.
+The Admin UI's "Secret key status" indicator reads ✓ Configured when either layer (DB or env) supplies a secret. So if your secret lives in `.env`, you can leave the form's secret field blank — the form treats blank as "keep current".
 
 ### Authorization for the settings page
 
