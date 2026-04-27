@@ -54,7 +54,28 @@ The captcha provider is detected from the saved settings; you don't need to wire
 
 By default the page is accessible to any user who can reach the panel (i.e. anyone who passes the panel's auth middleware). The plugin doesn't ship a built-in permission gate because Filament users have very different auth setups (some use Shield, some Bouncer, some plain canAccess(), some panel-level middleware). Pick whichever fits your app:
 
-**Filament Shield users**: subclass the page and add the trait, then point your panel at the subclass:
+#### Using [TallCMS](https://tallcms.com)? (zero config)
+
+[TallCMS](https://github.com/tallcms/tallcms) is a Laravel + Filament CMS built on the TALL stack. If you're using it, install the [`tallcms/registration`](https://github.com/tallcms/user-registration-plugin) bridge plugin and you're done — the bridge ships with sensible defaults out of the box:
+
+- Shield permission gating on the settings page (auto-creates `View:RegistrationSettings`, granted to `super_admin` by default)
+- Default role `site_owner` with role-aware policy scoping
+- Onboarding redirect into the Multisite Template Gallery for new users
+- Default site-plan assignment (Multisite plugin integration)
+- Themed login + register pages that match your active theme
+
+```bash
+# In a TallCMS install
+composer require tallcms/filament-registration
+php artisan migrate
+# Then upload the tallcms/registration bridge plugin via Admin → Plugins
+```
+
+No subclassing, no `canAccess()` override — TallCMS does it for you. Read more at [tallcms.com](https://tallcms.com).
+
+#### Filament Shield users
+
+Subclass the page and add the trait, then point your panel at the subclass:
 
 ```php
 namespace App\Filament\Pages;
@@ -70,7 +91,9 @@ class RegistrationSettings extends BaseRegistrationSettings
 
 Then run `php artisan shield:generate --page=RegistrationSettings --panel=<id>` once and grant the resulting `View:RegistrationSettings` permission to roles via the Shield UI.
 
-**Plain canAccess() users**: subclass and override:
+#### Plain `canAccess()` users
+
+Subclass and override:
 
 ```php
 public static function canAccess(): bool
