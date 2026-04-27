@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-04-27
+
+### Changed
+
+- **`spatie/laravel-permission` is now an optional dependency** (moved from `require` to `suggest`). The Register page checks `class_exists(Spatie\Permission\Models\Role::class)` before attempting role assignment, so hosts that don't use Spatie roles get a no-op instead of a fatal class-not-found error. Spatie users continue to work without changes.
+- **Removed `HasPageShield` trait from the default `RegistrationSettings` page**. Filament Shield is no longer a required dependency. By default the settings page is accessible to any user who can reach the panel; hosts wanting stricter gating subclass the page and either add `HasPageShield` (Shield users), override `canAccess()` (any custom check), or rely on panel `authMiddleware`.
+
+### Migration from 1.0.0
+
+If you installed v1.0.0 and ran `shield:generate --page=RegistrationSettings`, the resulting `View:RegistrationSettings` permission row is now orphan but harmless — the page no longer reads it. To restore Shield-based gating in v1.1.0, subclass the page in your app and add the `HasPageShield` trait, then point the panel at your subclass (the plugin's settings page registration accepts a config override; see README).
+
 ## [1.0.0] - 2026-04-26
 
 ### Added

@@ -50,11 +50,36 @@ After installation, navigate to **Admin → Settings → Registration** to confi
 
 The captcha provider is detected from the saved settings; you don't need to wire each provider individually.
 
-> **Heads up on fresh installs**: the settings page is gated by Filament Shield (uses the `HasPageShield` trait, generating a `View:RegistrationSettings` permission). On a fresh install the permission row doesn't exist yet, so the page is hidden from everyone — including super_admins. Run once after installing:
-> ```bash
-> php artisan shield:generate --page=RegistrationSettings --panel=<your-panel-id>
-> ```
-> This creates the permission and grants it to `super_admin`. Other roles get it via the Shield UI (Admin → Roles → pick role → Custom Permissions tab).
+### Authorization for the settings page
+
+By default the page is accessible to any user who can reach the panel (i.e. anyone who passes the panel's auth middleware). The plugin doesn't ship a built-in permission gate because Filament users have very different auth setups (some use Shield, some Bouncer, some plain canAccess(), some panel-level middleware). Pick whichever fits your app:
+
+**Filament Shield users**: subclass the page and add the trait, then point your panel at the subclass:
+
+```php
+namespace App\Filament\Pages;
+
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
+use Tallcms\FilamentRegistration\Filament\Pages\RegistrationSettings as BaseRegistrationSettings;
+
+class RegistrationSettings extends BaseRegistrationSettings
+{
+    use HasPageShield;
+}
+```
+
+Then run `php artisan shield:generate --page=RegistrationSettings --panel=<id>` once and grant the resulting `View:RegistrationSettings` permission to roles via the Shield UI.
+
+**Plain canAccess() users**: subclass and override:
+
+```php
+public static function canAccess(): bool
+{
+    return auth()->user()?->is_admin ?? false;
+}
+```
+
+**Optional dependency note**: role assignment via `defaultRole(...)` requires `spatie/laravel-permission` (suggested in `composer.json`). Hosts without Spatie permissions get role assignment as a no-op — no fatal error, the user is still created.
 
 ## Customising the post-register redirect
 

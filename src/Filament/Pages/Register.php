@@ -14,7 +14,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
-use Spatie\Permission\Models\Role;
 use Tallcms\FilamentRegistration\Captcha\Contracts\CaptchaProvider;
 use Tallcms\FilamentRegistration\Filament\FilamentRegistrationPlugin;
 use Tallcms\FilamentRegistration\Forms\Components\CaptchaField;
@@ -145,13 +144,24 @@ class Register extends BaseRegister
             $user->markEmailAsVerified();
         }
 
-        // 3. Default-role assignment. Skip + warn if the role doesn't exist
-        // (per the plugin's documented behaviour — a misconfig shouldn't
-        // block signups).
+        // 3. Default-role assignment. Three guards before assigning:
+        //   a) plugin has a default role configured
+        //   b) the User model exposes assignRole() (Spatie HasRoles trait)
+        //   c) the spatie/laravel-permission Role model class exists
+        // (a) skip + warn if the role doesn't exist (per the plugin's
+        // documented behaviour — a misconfig shouldn't block signups).
+        // (b) and (c) make spatie/laravel-permission a soft dependency:
+        // hosts that don't use Spatie roles get role assignment as a no-op
+        // instead of a fatal class-not-found.
         $defaultRole = FilamentRegistrationPlugin::get()->getDefaultRole();
+        $roleClass = '\\Spatie\\Permission\\Models\\Role';
 
-        if ($defaultRole !== null && method_exists($user, 'assignRole')) {
-            if (Role::query()->where('name', $defaultRole)->exists()) {
+        if (
+            $defaultRole !== null
+            && method_exists($user, 'assignRole')
+            && class_exists($roleClass)
+        ) {
+            if ($roleClass::query()->where('name', $defaultRole)->exists()) {
                 $user->assignRole($defaultRole);
             } else {
                 Log::warning(sprintf(

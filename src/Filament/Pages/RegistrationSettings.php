@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tallcms\FilamentRegistration\Filament\Pages;
 
-use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
@@ -23,14 +22,26 @@ use Tallcms\FilamentRegistration\Services\SettingsRepository;
 /**
  * Filament admin page for captcha configuration.
  *
- * Gated through Filament Shield's `HasPageShield` trait — auto-creates a
- * `View:RegistrationSettings` permission that hosts can toggle in the
- * Shield role UI. Falls back to a public page if Shield isn't installed
- * (the trait handles that case gracefully).
+ * **Authorization is the host's responsibility.** By default this page is
+ * accessible to any user who can reach the panel (i.e. authenticated users
+ * who pass the panel's auth middleware). Hosts that want stricter gating
+ * have several drop-in options:
+ *
+ *   1. **Filament Shield**: subclass this page in the host app and add
+ *      `use BezhanSalleh\FilamentShield\Traits\HasPageShield;`. Then wire
+ *      the subclass via the plugin's `settingsPage(YourSettingsPage::class)`.
+ *   2. **Plain canAccess()**: subclass and override `canAccess()` with any
+ *      custom check (`auth()->user()->is_admin`, role check, etc.).
+ *   3. **Panel middleware**: add the standard Laravel/Filament middleware
+ *      to the panel's `->authMiddleware([...])` list.
+ *
+ * Coupling this class to Filament Shield by default would force every
+ * Filament user installing the plugin to also install Shield — too
+ * opinionated for a generic community plugin.
  */
 class RegistrationSettings extends Page implements HasForms
 {
-    use HasPageShield, InteractsWithForms;
+    use InteractsWithForms;
 
     protected string $view = 'filament-registration::filament.pages.registration-settings';
 
