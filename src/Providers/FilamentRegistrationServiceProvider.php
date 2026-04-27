@@ -55,6 +55,17 @@ class FilamentRegistrationServiceProvider extends ServiceProvider
     /**
      * Pull DB-stored settings (managed via Filament admin) into runtime
      * config so the captcha manager picks them up.
+     *
+     * Empty-string and null DB values are skipped so they don't clobber
+     * env-loaded defaults. Without this guard, saving the form with a
+     * blank site_key (e.g. when the user hasn't filled it yet but pressed
+     * Save to set the secret) would override a perfectly good
+     * FILAMENT_REGISTRATION_CAPTCHA_SITE_KEY env var with an empty string
+     * and fall back to NullCaptchaProvider.
+     *
+     * Booleans (including false), numbers (including 0), and non-empty
+     * strings all still override env — empty/null is the one signal we
+     * treat as "not set; let env win".
      */
     private function mergeDbSettingsIntoConfig(): void
     {
@@ -77,9 +88,17 @@ class FilamentRegistrationServiceProvider extends ServiceProvider
         ];
 
         foreach ($map as $dbKey => $configKey) {
-            if (array_key_exists($dbKey, $stored)) {
-                config([$configKey => $stored[$dbKey]]);
+            if (! array_key_exists($dbKey, $stored)) {
+                continue;
             }
+
+            $value = $stored[$dbKey];
+
+            if ($value === null || $value === '') {
+                continue;
+            }
+
+            config([$configKey => $value]);
         }
     }
 }

@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-04-27
+
+### Fixed
+
+- **Empty DB values no longer clobber env defaults during config merge.** `mergeDbSettingsIntoConfig()` was overriding runtime config for any key present in `tallcms_registration_settings`, even when the stored value was an empty string. This silently broke env-driven setups where the user pressed Save in the admin form before filling all fields — a blank site_key in the DB would clobber a valid `FILAMENT_REGISTRATION_CAPTCHA_SITE_KEY` env var and the captcha manager would fall back to `NullCaptchaProvider`. The merge now skips empty-string and null values, so env wins when the DB row is unfilled. Booleans (including `false`), numbers (including `0`), and non-empty strings all still override env as before.
+
 ## [1.1.1] - 2026-04-27
 
 ### Fixed
