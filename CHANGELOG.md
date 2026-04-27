@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [1.1.3] - 2026-04-27
+
+### Fixed
+
+- **Env vars now survive `php artisan config:cache` on production deploys.** The service provider was calling `env()` directly in `register()`, which silently returns `null` once Laravel's config cache is active (Laravel intentionally skips `.env` loading on cached deploys for performance). Symptom: dev (`config:clear`) worked perfectly, but production with cached config saw `FILAMENT_REGISTRATION_CAPTCHA_*` env vars resolve to empty/null at runtime — captcha falling back to `NullCaptchaProvider` regardless of what was in `.env`. Moved env() calls into an internal package config file (`config/filament-registration.php`) and load via `mergeConfigFrom()`. The values are now baked into `bootstrap/cache/config.php` at cache-time and read from there at runtime, the standard Laravel package pattern.
+
+### Upgrade note
+
+If you're on a deploy that runs `php artisan config:cache`, after pulling v1.1.3 you must re-run the cache step so the new config-file values get baked in:
+
+```bash
+composer install
+php artisan config:cache    # or `php artisan optimize`
+sudo systemctl restart php8.4-fpm
+```
+
 ## [1.1.2] - 2026-04-27
 
 ### Fixed

@@ -15,21 +15,20 @@ class FilamentRegistrationServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // Two-layer config: env vars provide defaults, the Admin UI (DB)
-        // overlays on top during boot(). The plugin doesn't ship a publishable
-        // config/filament-registration.php — settings live in env or in the
-        // tallcms_registration_settings table.
-        config(['filament-registration' => [
-            'captcha' => [
-                // null = auto (enable iff site_key and secret_key are both present);
-                // explicit true/false from env wins.
-                'enabled' => env('FILAMENT_REGISTRATION_CAPTCHA_ENABLED'),
-                'provider' => env('FILAMENT_REGISTRATION_CAPTCHA_PROVIDER', 'turnstile'),
-                'site_key' => env('FILAMENT_REGISTRATION_CAPTCHA_SITE_KEY', ''),
-                'secret_key' => env('FILAMENT_REGISTRATION_CAPTCHA_SECRET_KEY', ''),
-                'recaptcha_min_score' => (float) env('FILAMENT_REGISTRATION_CAPTCHA_RECAPTCHA_MIN_SCORE', 0.5),
-            ],
-        ]]);
+        // Two-layer config: env vars provide defaults via the package's
+        // internal config file, the Admin UI (DB) overlays on top during
+        // boot(). The plugin doesn't ship a publishable config — hosts
+        // configure via env or the admin UI.
+        //
+        // mergeConfigFrom is critical for production: it's a no-op when
+        // config:cache is active (Laravel skips it to use the cached file),
+        // and the cached file already has env() values baked in from the
+        // last time config:cache ran. Calling env() directly in this
+        // method instead would return null on production once cache runs.
+        $this->mergeConfigFrom(
+            __DIR__.'/../../config/filament-registration.php',
+            'filament-registration'
+        );
 
         $this->app->singleton(SettingsRepository::class);
         $this->app->singleton(CaptchaManager::class);
