@@ -30,6 +30,9 @@ class FilamentRegistrationPlugin implements Plugin
 {
     protected ?string $defaultRole = null;
 
+    /** @var class-string<RegistrationSettings> */
+    protected string $settingsPage = RegistrationSettings::class;
+
     public function getId(): string
     {
         return 'filament-registration';
@@ -38,7 +41,7 @@ class FilamentRegistrationPlugin implements Plugin
     public function register(Panel $panel): void
     {
         $panel->pages([
-            RegistrationSettings::class,
+            $this->settingsPage,
         ]);
     }
 
@@ -78,5 +81,37 @@ class FilamentRegistrationPlugin implements Plugin
     public function getDefaultRole(): ?string
     {
         return $this->defaultRole;
+    }
+
+    /**
+     * Swap in a host-defined settings page subclass — typically one that adds
+     * `BezhanSalleh\FilamentShield\Traits\HasPageShield` for permission gating
+     * (or any other host-specific access control).
+     *
+     * Pass a class name extending `Tallcms\FilamentRegistration\Filament\Pages\RegistrationSettings`.
+     * Skip the call to keep the package's default page (no Shield gating, public
+     * to anyone who can access the panel).
+     *
+     * @param class-string<RegistrationSettings> $class
+     */
+    public function settingsPage(string $class): static
+    {
+        if (! is_subclass_of($class, RegistrationSettings::class) && $class !== RegistrationSettings::class) {
+            throw new \InvalidArgumentException(
+                "Settings page class must extend ".RegistrationSettings::class.", got {$class}"
+            );
+        }
+
+        $this->settingsPage = $class;
+
+        return $this;
+    }
+
+    /**
+     * @return class-string<RegistrationSettings>
+     */
+    public function getSettingsPage(): string
+    {
+        return $this->settingsPage;
     }
 }
