@@ -169,9 +169,10 @@ Your concrete just needs to implement `RegistrationResponse` (which extends `Res
 
 ## Compatibility
 
-- PHP 8.2+
+- PHP 8.2+ (Laravel 13 requires PHP 8.3+)
+- Laravel 11, 12, or 13
 - Filament v5+
-- spatie/laravel-permission v6+ (for role assignment)
+- spatie/laravel-permission v6 or v7 (for role assignment)
 
 ## License
 
