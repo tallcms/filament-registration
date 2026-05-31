@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-05-31
+
+### Added
+
+- **Laravel 13 support.** Widened `illuminate/support` to `^11.0|^12.0|^13.0`. This was the last dependency blocking the standalone TallCMS skeleton from running on Laravel 13 (the core `tallcms/cms` package is already Laravel 13–ready). Dev dependencies bumped accordingly: `orchestra/testbench ^11.0` and `spatie/laravel-permission ^7.0` (Laravel 13 requires PHP 8.3+).
+- **CI test matrix.** Added a GitHub Actions workflow running the suite across PHP 8.2–8.4 and Laravel 11/12/13.
+- **Composer scripts.** Added `composer test` and `composer pint` to match the documented release workflow.
+
+## [1.2.0] - 2026-04-26
+
+### Added
+
+- **`settingsPage()` setter** on the plugin for host-defined Shield gating of the captcha admin page.
+
 ## [1.1.3] - 2026-04-27
 
 ### Fixed
