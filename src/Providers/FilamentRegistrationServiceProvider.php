@@ -30,6 +30,9 @@ class FilamentRegistrationServiceProvider extends ServiceProvider
             'filament-registration'
         );
 
+        // Load early so Filament nav labels resolve before nested providers boot.
+        $this->loadTranslationsFrom(__DIR__.'/../../lang', 'filament-registration');
+
         $this->app->singleton(SettingsRepository::class);
         $this->app->singleton(CaptchaManager::class);
 

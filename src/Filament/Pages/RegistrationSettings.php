@@ -45,11 +45,21 @@ class RegistrationSettings extends Page implements HasForms
 
     protected string $view = 'filament-registration::filament.pages.registration-settings';
 
-    protected static ?string $navigationLabel = 'Registration';
+    protected static ?string $navigationLabel = null;
 
-    protected static ?string $title = 'Registration & CAPTCHA';
+    protected static ?string $title = null;
 
     public ?array $data = [];
+
+    public static function getNavigationLabel(): string
+    {
+        return __('filament-registration::messages.navigation_label');
+    }
+
+    public function getTitle(): string|\Illuminate\Contracts\Support\Htmlable
+    {
+        return __('filament-registration::messages.title');
+    }
 
     public static function getNavigationIcon(): string
     {
@@ -58,7 +68,7 @@ class RegistrationSettings extends Page implements HasForms
 
     public static function getNavigationGroup(): ?string
     {
-        return 'Settings';
+        return __('filament-registration::messages.navigation_group');
     }
 
     public static function getNavigationSort(): ?int
@@ -95,59 +105,63 @@ class RegistrationSettings extends Page implements HasForms
         $secretConfigured = $secretInDb || $secretInConfig;
 
         $secretHelper = match (true) {
-            $secretInDb => 'A secret is already saved (encrypted in the database). Leave this blank to keep it, or paste a new one to replace it.',
-            $secretFromOutsideDb => 'A secret is set in your server environment. Paste a value here to override it from the database, or leave blank to keep using the environment value.',
-            default => 'Paste the secret key from your CAPTCHA provider. It will be encrypted before being saved.',
+            $secretInDb => __('filament-registration::messages.secret_help_in_db'),
+            $secretFromOutsideDb => __('filament-registration::messages.secret_help_in_env'),
+            default => __('filament-registration::messages.secret_help_default'),
         };
 
         return [
-            Section::make('CAPTCHA')
-                ->description('Bot protection on the public registration form. Leave disabled to fall back to honeypot + rate limiting only.')
+            Section::make(__('filament-registration::messages.section_captcha'))
+                ->description(__('filament-registration::messages.section_captcha_description'))
                 ->schema([
                     Toggle::make('captcha_enabled')
-                        ->label('Enable CAPTCHA')
-                        ->helperText('When off, the registration form skips CAPTCHA verification entirely.'),
+                        ->label(__('filament-registration::messages.enable_captcha'))
+                        ->helperText(__('filament-registration::messages.enable_captcha_help')),
 
                     Select::make('captcha_provider')
-                        ->label('Provider')
+                        ->label(__('filament-registration::messages.provider'))
                         ->options([
-                            'turnstile' => 'Cloudflare Turnstile',
-                            'recaptcha_v3' => 'Google reCAPTCHA v3',
+                            'turnstile' => __('filament-registration::messages.provider_turnstile'),
+                            'recaptcha_v3' => __('filament-registration::messages.provider_recaptcha_v3'),
                         ])
                         ->required()
                         ->live()
                         ->helperText(new HtmlString(
-                            'Cloudflare Turnstile is privacy-friendly and free. Get keys at '
-                            .'<a href="https://dash.cloudflare.com/?to=/:account/turnstile" target="_blank" class="underline">Cloudflare Turnstile</a>. '
-                            .'reCAPTCHA v3 keys come from the '
-                            .'<a href="https://www.google.com/recaptcha/admin" target="_blank" class="underline">reCAPTCHA admin console</a>.'
+                            __('filament-registration::messages.provider_help', [
+                                'turnstile_url' => 'https://dash.cloudflare.com/?to=/:account/turnstile',
+                                'recaptcha_url' => 'https://www.google.com/recaptcha/admin',
+                            ])
                         )),
 
                     TextInput::make('captcha_site_key')
-                        ->label('Site key')
-                        ->helperText('Public key embedded in the form. Safe to put in source control.')
+                        ->label(__('filament-registration::messages.site_key'))
+                        ->helperText(__('filament-registration::messages.site_key_help'))
                         ->maxLength(255),
 
                     Placeholder::make('captcha_secret_status')
-                        ->label('Secret key status')
+                        ->label(__('filament-registration::messages.secret_status'))
                         ->content(fn () => new HtmlString(
                             $secretConfigured
-                                ? '<span class="text-success font-medium">✓ Configured</span>'
-                                : '<span class="text-warning font-medium">✗ Not set — registration will fall back to no CAPTCHA</span>'
+                                ? '<span class="text-success font-medium">'.e(__('filament-registration::messages.secret_configured')).'</span>'
+                                : '<span class="text-warning font-medium">'.e(__('filament-registration::messages.secret_not_set')).'</span>'
                         )),
 
                     TextInput::make('captcha_secret_key')
-                        ->label($secretConfigured ? 'Replace secret key' : 'Secret key')
+                        ->label($secretConfigured
+                            ? __('filament-registration::messages.replace_secret_key')
+                            : __('filament-registration::messages.secret_key'))
                         ->password()
                         ->revealable()
-                        ->placeholder($secretConfigured ? '••••••••' : 'Paste your provider secret key')
+                        ->placeholder($secretConfigured
+                            ? '••••••••'
+                            : __('filament-registration::messages.secret_placeholder'))
                         ->helperText($secretHelper)
                         ->maxLength(500)
                         ->dehydrated(fn (?string $state) => filled($state)),
 
                     TextInput::make('captcha_recaptcha_min_score')
-                        ->label('Minimum score (reCAPTCHA v3 only)')
-                        ->helperText('Tokens scoring below this threshold are rejected. Range 0.0 (lenient) – 1.0 (strict). Default 0.5.')
+                        ->label(__('filament-registration::messages.min_score'))
+                        ->helperText(__('filament-registration::messages.min_score_help'))
                         ->numeric()
                         ->minValue(0)
                         ->maxValue(1)
@@ -164,24 +178,24 @@ class RegistrationSettings extends Page implements HasForms
 
         return [
             Action::make('clear_secret')
-                ->label('Clear saved secret')
+                ->label(__('filament-registration::messages.clear_secret'))
                 ->icon('heroicon-o-trash')
                 ->color('danger')
                 ->visible(fn () => $secretInDb)
                 ->requiresConfirmation()
-                ->modalDescription('This deletes the encrypted secret from the database. CAPTCHA verification will fall back to the value in FILAMENT_REGISTRATION_CAPTCHA_SECRET_KEY (if set), or disable itself if no env value exists.')
+                ->modalDescription(__('filament-registration::messages.clear_secret_modal'))
                 ->action(function () use ($repo) {
                     $repo->forget('captcha_secret_key');
 
                     Notification::make()
-                        ->title('Saved secret cleared')
-                        ->body('Now using the environment value (if any).')
+                        ->title(__('filament-registration::messages.secret_cleared_title'))
+                        ->body(__('filament-registration::messages.secret_cleared_body'))
                         ->success()
                         ->send();
                 }),
 
             Action::make('test')
-                ->label('Test verification')
+                ->label(__('filament-registration::messages.test_verification'))
                 ->color('gray')
                 ->icon('heroicon-o-bolt')
                 ->action(function () {
@@ -192,8 +206,8 @@ class RegistrationSettings extends Page implements HasForms
 
                     if (! $captcha->isEnabled()) {
                         Notification::make()
-                            ->title('CAPTCHA is not enabled')
-                            ->body('Enable it and configure both keys, then try again.')
+                            ->title(__('filament-registration::messages.captcha_not_enabled_title'))
+                            ->body(__('filament-registration::messages.captcha_not_enabled_body'))
                             ->warning()
                             ->send();
 
@@ -208,14 +222,14 @@ class RegistrationSettings extends Page implements HasForms
 
                     if ($result === false) {
                         Notification::make()
-                            ->title('Reachable')
-                            ->body('Provider responded and rejected a deliberately bogus token, as expected. Live submissions with valid tokens should pass.')
+                            ->title(__('filament-registration::messages.reachable_title'))
+                            ->body(__('filament-registration::messages.reachable_body'))
                             ->success()
                             ->send();
                     } else {
                         Notification::make()
-                            ->title('Unexpected pass')
-                            ->body('A bogus token was accepted. Check your secret key and provider configuration.')
+                            ->title(__('filament-registration::messages.unexpected_pass_title'))
+                            ->body(__('filament-registration::messages.unexpected_pass_body'))
                             ->danger()
                             ->send();
                     }
@@ -259,7 +273,7 @@ class RegistrationSettings extends Page implements HasForms
 
         if ($notify) {
             Notification::make()
-                ->title('Registration settings saved')
+                ->title(__('filament-registration::messages.settings_saved'))
                 ->success()
                 ->send();
         }
