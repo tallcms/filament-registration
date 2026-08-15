@@ -54,12 +54,12 @@ class RegistrationSettings extends Page implements HasForms
 
     public static function getNavigationLabel(): string
     {
-        return __('filament-registration::messages.navigation_label');
+        return static::$navigationLabel ?? __('filament-registration::messages.navigation_label');
     }
 
     public function getTitle(): string|Htmlable
     {
-        return __('filament-registration::messages.title');
+        return static::$title ?? __('filament-registration::messages.title');
     }
 
     public static function getNavigationIcon(): string

@@ -6,15 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-08-15
+
+### Fixed
+
+- **Subclasses of `RegistrationSettings` can once again override the nav label and page title.** v1.4.0's `getNavigationLabel()` / `getTitle()` returned the translated string unconditionally, ignoring `static::$navigationLabel` / `static::$title`. Both getters now check the static property first and fall back to the translation, restoring the documented subclass-and-override pattern (e.g. for `settingsPage()` Shield gating).
+
 ## [1.4.0] - 2026-08-15
 
 ### Added
 
 - **Admin UI and registration error messages are now locale-aware.** Added `lang/en/messages.php` and `lang/de/messages.php`, and wired `RegistrationSettings` (nav label/group, page title, form labels/helpers, actions, notifications), the settings Blade view, `CaptchaField`, and `Register` page validation messages through `__('filament-registration::messages.…')`. Driven by the host app's `APP_LOCALE`; ships with English and German out of the box.
-
-### Known issue
-
-- `RegistrationSettings::getNavigationLabel()` / `getTitle()` now return the translated string directly instead of checking `static::$navigationLabel` / `static::$title` first, so subclasses that override those properties to customize the nav label/title (e.g. for `settingsPage()` Shield gating) will find them silently ignored. Fix planned for a follow-up patch release.
 
 ## [1.3.0] - 2026-05-31
 
