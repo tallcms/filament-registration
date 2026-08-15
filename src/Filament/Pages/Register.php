@@ -76,7 +76,7 @@ class Register extends BaseRegister
         // 1. Honeypot — bots fill hidden inputs; humans don't.
         if (! empty($data[self::HONEYPOT_FIELD] ?? null)) {
             throw ValidationException::withMessages([
-                'data.'.self::HONEYPOT_FIELD => __('Bot check failed. Please try again.'),
+                'data.'.self::HONEYPOT_FIELD => __('filament-registration::messages.bot_check_failed'),
             ]);
         }
         unset($data[self::HONEYPOT_FIELD]);
@@ -101,7 +101,7 @@ class Register extends BaseRegister
 
         if (RateLimiter::tooManyAttempts($throttleKey, 30)) {
             throw ValidationException::withMessages([
-                'data.'.$tokenField => __('Too many attempts. Please wait a minute and try again.'),
+                'data.'.$tokenField => __('filament-registration::messages.too_many_attempts'),
             ]);
         }
 
@@ -110,7 +110,7 @@ class Register extends BaseRegister
         // 3. Captcha verify.
         if (! $captcha->verify($token, request()->ip())) {
             throw ValidationException::withMessages([
-                'data.'.$tokenField => __('Captcha verification failed. Please try again.'),
+                'data.'.$tokenField => __('filament-registration::messages.captcha_failed'),
             ]);
         }
 

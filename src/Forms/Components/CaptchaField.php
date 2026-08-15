@@ -40,7 +40,7 @@ class CaptchaField extends Field
         // "Cf turnstile response" heading above the widget. The widget itself
         // is self-explanatory, so the label is hidden — but it's still set so
         // screen readers and validation messages have a sensible identity.
-        $static->label(__('Verification'));
+        $static->label(__('filament-registration::messages.verification'));
         $static->hiddenLabel();
 
         return $static;

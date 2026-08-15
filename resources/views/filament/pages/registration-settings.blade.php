@@ -4,7 +4,7 @@
 
         <div class="mt-8">
             <x-filament::button type="submit" color="primary">
-                Save Settings
+                {{ __('filament-registration::messages.save_settings') }}
             </x-filament::button>
         </div>
     </form>
