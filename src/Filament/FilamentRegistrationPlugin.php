@@ -92,13 +92,13 @@ class FilamentRegistrationPlugin implements Plugin
      * Skip the call to keep the package's default page (no Shield gating, public
      * to anyone who can access the panel).
      *
-     * @param class-string<RegistrationSettings> $class
+     * @param  class-string<RegistrationSettings>  $class
      */
     public function settingsPage(string $class): static
     {
         if (! is_subclass_of($class, RegistrationSettings::class) && $class !== RegistrationSettings::class) {
             throw new \InvalidArgumentException(
-                "Settings page class must extend ".RegistrationSettings::class.", got {$class}"
+                'Settings page class must extend '.RegistrationSettings::class.", got {$class}"
             );
         }
 

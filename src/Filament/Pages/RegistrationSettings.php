@@ -14,6 +14,7 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\HtmlString;
 use Tallcms\FilamentRegistration\Captcha\CaptchaManager;
 use Tallcms\FilamentRegistration\Captcha\Contracts\CaptchaProvider;
@@ -56,7 +57,7 @@ class RegistrationSettings extends Page implements HasForms
         return __('filament-registration::messages.navigation_label');
     }
 
-    public function getTitle(): string|\Illuminate\Contracts\Support\Htmlable
+    public function getTitle(): string|Htmlable
     {
         return __('filament-registration::messages.title');
     }
