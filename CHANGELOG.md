@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [1.4.2] - 2026-08-16
+
+### Fixed
+
+- **Registration 500s with `RouteNotFoundException: Route [verification.verify] not defined` when `->emailVerification()` is required.** `Register::handleRegistration()` fires Laravel's `Illuminate\Auth\Events\Registered` event so non-Filament listeners (e.g. multisite site-plan assignment) keep working, but that also triggers Laravel's own auto-registered `SendEmailVerificationNotification` listener. Its default `MustVerifyEmail::sendEmailVerificationNotification()` builds `Illuminate\Auth\Notifications\VerifyEmail`, which resolves its link via `route('verification.verify')` — a route Filament-only apps never register, since they use panel-scoped verification routes instead. `FilamentRegistrationServiceProvider` now registers `VerifyEmail::createUrlUsing()` (guarded so it won't clobber a host's own callback) pointing at `Filament::getVerifyEmailUrl()`, so that listener's notification resolves a working link instead of crashing.
+- **Duplicate verification email once the crash above is fixed.** With the URL fixed, both Laravel's built-in listener and Filament's own `sendEmailVerificationNotification()` (called from `register()`) would each send a verification email. `Register` now detects when the Laravel listener already handled it (`Event::getRawListeners()`) and defers to it, falling back to Filament's native send only if that listener isn't registered.
+
+Reported in [#3](https://github.com/tallcms/filament-registration/issues/3).
+
 ## [1.4.1] - 2026-08-15
 
 ### Fixed

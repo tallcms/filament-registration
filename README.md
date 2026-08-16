@@ -44,6 +44,8 @@ public function panel(Panel $panel): Panel
 
 Optional: enable Filament's built-in email verification with `->emailVerification()`. The plugin defers to it — when the panel requires verification, Filament sends the verification email; when it doesn't, new users are pre-marked verified.
 
+If your `User` model implements `MustVerifyEmail`, the plugin also makes sure the verification email always resolves a working link. It registers `Illuminate\Auth\Notifications\VerifyEmail::createUrlUsing()` pointing at Filament's own `getVerifyEmailUrl()`, so Laravel's default verification-listener flow (triggered by the `Registered` event bridge below) doesn't need a `verification.verify` route that Filament-only apps never define — and it skips Filament's own send when that listener already handled it, so you get exactly one email. This callback is only registered if your app hasn't already set its own (e.g. because it also runs a separate, non-Filament auth flow with its own verification route).
+
 ## Configuration
 
 Captcha settings come from two layers, with the higher one winning:
