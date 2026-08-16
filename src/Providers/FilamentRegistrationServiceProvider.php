@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tallcms\FilamentRegistration\Providers;
 
 use Filament\Auth\Http\Responses\Contracts\RegistrationResponse as RegistrationResponseContract;
+use Filament\Facades\Filament;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\ServiceProvider;
 use Tallcms\FilamentRegistration\Captcha\CaptchaManager;
 use Tallcms\FilamentRegistration\Captcha\Contracts\CaptchaProvider;
@@ -52,6 +54,39 @@ class FilamentRegistrationServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
 
         $this->mergeDbSettingsIntoConfig();
+        $this->configureEmailVerificationUrl();
+    }
+
+    /**
+     * Point Laravel's default `MustVerifyEmail` notification at Filament's
+     * panel-scoped verification route instead of the `verification.verify`
+     * route name.
+     *
+     * `Register::handleRegistration()` fires Laravel's `Illuminate\Auth\
+     * Events\Registered` event (see that method's docblock) so non-Filament
+     * listeners keep working. That also triggers Laravel's own
+     * auto-registered `SendEmailVerificationNotification` listener, which
+     * calls `$user->sendEmailVerificationNotification()` — the stock
+     * `MustVerifyEmail` trait method builds `Illuminate\Auth\Notifications\
+     * VerifyEmail`, and that notification resolves its link via
+     * `route('verification.verify')`. Filament-only apps never register
+     * that route (they use panel-scoped verification routes instead), so
+     * every registration with `->emailVerification()` required threw
+     * `RouteNotFoundException` before this fix.
+     *
+     * Guarded so a host that already customised `VerifyEmail::createUrlUsing()`
+     * (e.g. because it also runs a non-Filament auth flow with its own
+     * `verification.verify` route) keeps its own behaviour.
+     */
+    private function configureEmailVerificationUrl(): void
+    {
+        if (VerifyEmail::$createUrlCallback !== null) {
+            return;
+        }
+
+        VerifyEmail::createUrlUsing(
+            fn (mixed $notifiable): string => Filament::getVerifyEmailUrl($notifiable)
+        );
     }
 
     /**

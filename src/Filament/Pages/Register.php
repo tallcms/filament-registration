@@ -9,8 +9,10 @@ use Filament\Facades\Filament;
 use Filament\Forms\Components\Hidden;
 use Filament\Schemas\Schema;
 use Illuminate\Auth\Events\Registered as LaravelRegistered;
+use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
@@ -27,10 +29,10 @@ use Tallcms\FilamentRegistration\Forms\Components\CaptchaField;
  *    event keep firing (Filament fires its own `Filament\Auth\Events\Registered`)
  *
  * All customisation lives inside Filament's documented hooks
- * (`form()`, `mutateFormDataBeforeRegister()`, `handleRegistration()`).
- * We don't override `register()` — the parent's body handles validation,
- * throttling, hook dispatch, login, and redirect. That keeps us future-proof
- * across Filament patch releases.
+ * (`form()`, `mutateFormDataBeforeRegister()`, `handleRegistration()`,
+ * `sendEmailVerificationNotification()`). We don't override `register()` —
+ * the parent's body handles validation, throttling, hook dispatch, login,
+ * and redirect. That keeps us future-proof across Filament patch releases.
  */
 class Register extends BaseRegister
 {
@@ -179,5 +181,40 @@ class Register extends BaseRegister
         event(new LaravelRegistered($user));
 
         return $user;
+    }
+
+    /**
+     * Skip Filament's own verification email when Laravel's built-in
+     * `SendEmailVerificationNotification` listener already sent one.
+     *
+     * The `LaravelRegistered` bridge dispatched in `handleRegistration()`
+     * above triggers that listener (registered by default in virtually
+     * every Laravel app — see `Illuminate\Foundation\Support\Providers\
+     * EventServiceProvider::configureEmailVerification()`) before the
+     * parent's `register()` reaches this hook. Left as-is, both that
+     * listener and this method would send a verification email, so the
+     * user gets two. `FilamentRegistrationServiceProvider` registers a
+     * `VerifyEmail::createUrlUsing()` callback that makes the listener's
+     * notification resolve a valid Filament verification URL, so it's
+     * safe to defer to it here.
+     *
+     * Falls back to Filament's native send if that listener isn't
+     * registered (e.g. a host removed it), so verification emails are
+     * never silently dropped.
+     */
+    protected function sendEmailVerificationNotification(Model $user): void
+    {
+        if ($this->isLaravelVerificationListenerRegistered()) {
+            return;
+        }
+
+        parent::sendEmailVerificationNotification($user);
+    }
+
+    protected function isLaravelVerificationListenerRegistered(): bool
+    {
+        $listeners = Event::getRawListeners()[LaravelRegistered::class] ?? [];
+
+        return in_array(SendEmailVerificationNotification::class, $listeners, true);
     }
 }
